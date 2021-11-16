@@ -37,6 +37,7 @@ def connect_google_drive(project_name):
     drive.mount('/content/gdrive')
 
     model_dir = os.path.join(DRIVE_ROOT_DIR, project_name)
+    model_dir = os.path.join(model_dir, "dnn")
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
         print("New project created {}".format(project_name))
