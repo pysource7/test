@@ -1,7 +1,7 @@
 import os
 import sys
 import urllib.request
-
+import zipfile
 
 DRIVE_ROOT_DIR = "/content/gdrive/MyDrive/pysource_object_detection/"
 DARKNET_PATH = "/content/darknet"
@@ -46,12 +46,9 @@ def connect_google_drive(project_name):
         print("Project {} already exists. Editing existing project.".format(project_name))
     return model_dir
 
-def create_mrcnn_output_directory(project_name):
-    model_dir = os.path.join(DRIVE_ROOT_DIR,  project_name)
-    if not os.path.exists(model_dir):
-        os.makedirs(model_dir)
-        print("New project created {}".format(project_name))
-        print("You'll find the project on Google Drive, pysource_mrcnn_pro/{} .".format(project_name))
-    else:
-        print("Project {} already exists. Editing existing project.".format(project_name))
-    return model_dir
+def unzip_dataset(project_name):
+    dataset_path = os.path.join(DRIVE_ROOT_DIR, project_name)
+    dataset_path = os.path.join(dataset_path, "dataset.zip")
+    output_path = "/content/darknet/data/obj"
+    with zipfile.ZipFile(dataset_path, 'r') as zip_ref:
+        zip_ref.extractall("/content/darknet/data/obj")
