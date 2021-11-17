@@ -45,6 +45,7 @@ class CustomYOLODetector:
         self.drive_folder = r"/content/gdrive/MyDrive/pysource_object_detection"
         self.custom_cfg_path = self.cfg_paths.get(self.model)
         self.new_custom_cfg_path = "cfg/temp-custom-detector.cfg"
+        self.dnn_path = "{}/{}/dnn".format(self.drive_folder, self.projectname)
         self.new_custom_cfg_test_path = "{}/{}/dnn/{}-custom.cfg".format(self.drive_folder, self.projectname, self.model)
         self.obj_data_path = "data/obj.data"
         self.obj_names_path = "data/obj.names"
@@ -108,7 +109,7 @@ class CustomYOLODetector:
                         for item in text_converted:
                             fp.writelines("%s\n" % item)
 
-    def generate_yolo_custom_cfg(self):
+    def generate_yolo_custom_cfg(self, flag="training"):
         """
         This files loads the yolo
         :return:
@@ -126,7 +127,7 @@ class CustomYOLODetector:
         print("Settings:")
         print("max batches: {}".format(max_batches))
 
-        with open(args["cfgpath"], "r") as f_o:
+        with open(self.custom_cfg_path, "r") as f_o:
             cfg_lines = f_o.readlines()
 
         lines = []
@@ -168,8 +169,14 @@ class CustomYOLODetector:
             lines.append(line)
 
         # Saving edited file
-        with open(self.new_custom_cfg_path, "w") as f_o:
-            f_o.writelines(lines)
+        if not os.path.exists(self.dnn_path):
+            os.makedirs(self.dnn_path)
+        if flag == "training":
+            with open(self.new_custom_cfg_path, "w") as f_o:
+                f_o.writelines(cfg_lines)
+        else:
+            with open(self.new_custom_cfg_test_path, "w") as f_o:
+                f_o.writelines(cfg_lines)
 
     def generate_obj_data(self):
         obj_data = 'classes= {}\ntrain  = data/train.txt\nvalid  = data/test.txt\nnames = data/obj.names\nbackup = {}' \
