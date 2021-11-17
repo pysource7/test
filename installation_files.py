@@ -1,7 +1,7 @@
 import os
-import sys
 import urllib.request
 import zipfile
+from pathlib import Path
 
 DRIVE_ROOT_DIR = "/content/gdrive/MyDrive/pysource_object_detection/"
 DARKNET_PATH = "/content/darknet"
@@ -53,16 +53,17 @@ def unzip_dataset(project_name):
         zip_ref.extractall("/content/darknet/data/obj")
 
 
-from pathlib import Path
-
-
 def extract_dataset(project_name):
+    print("Extracting dataset ...")
     dataset_path = os.path.join(DRIVE_ROOT_DIR, project_name)
     dataset_path = os.path.join(dataset_path, "dataset.zip")
     output_path = Path("/content/darknet/data/obj")
-    zip_file = zipfile.ZipFile(dataset_path, 'r')
-    for files in zip_file.namelist():
-        data = zip_file.read(files, output_path)
-        myfile_path = output_path / Path(files.filename).name
-        myfile_path.write_bytes(data)
-    zip_file.close()
+
+    with zipfile.ZipFile(dataset_path) as zip:
+        for zip_info in zip.infolist():
+            if zip_info.filename[-1] == '/':
+                continue
+            zip_info.filename = os.path.basename(zip_info.filename)
+            zip.extract(zip_info, output_path)
+
+    print("Dataset Extracted")
