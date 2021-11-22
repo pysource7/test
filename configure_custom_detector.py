@@ -5,17 +5,20 @@ import errno
 import os
 import argparse
 import re
+import urllib.request
 import zipfile
 from pathlib import Path
+
+DARKNET_PATH = "/content/darknet"
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 # ap.add_argument("-c", "--n_classes", type=int, required=True, help="number of classes")
 ap.add_argument("-b", "--backup", type=str, required=False, help="backup path")
-ap.add_argument("-s", "--subdivisions", type=str, required=False, default="64", choices=["16", "32", "64"],
-                help="Subdivisions value (16, 32, 64)")
+# ap.add_argument("-s", "--subdivisions", type=str, required=False, default="64", choices=["16", "32", "64"],
+#                 help="Subdivisions value (16, 32, 64)")
 ap.add_argument("-pn", "--projectname", type=str, required=True, help="Project Name")
-ap.add_argument("-m", "--model", type=str, required=False, choices=["yolov4", "yolov4-tiny", "yolov4-p6"],
+ap.add_argument("-m", "--model", type=str, required=False,
                 default="yolov4", help="YOLO Model")
 ap.add_argument("-is", "--imagesize", type=str, required=False,
                 help="Image size")
@@ -30,13 +33,21 @@ class CustomYOLODetector:
         # Files location
         self.cfg_paths = {"yolov4": "cfg/yolov4-custom.cfg",
                      "yolov4-tiny": "cfg/yolov4-tiny-custom.cfg",
-                     "yolov4-p6": "cfg/yolov4-p6.cfg"}
+                     "yolov4-csp": "cfg/yolov4-csp.cfg"}
+
+        self.subdivisions_by_model = {"yolov4": 32,
+                                      "yolov4-tiny": 8,
+                                      "yolov4-csp": 32}
+
+        self.weights_by_model = {"yolov4": "yolov4.conv.137",
+                            "yolov4-tiny": "yolov4-tiny.conv.29",
+                            "yolov4-csp": "yolov4-csp.conv.142"}
 
         # Argument import
         if args["backup"]:
             self.backup_folder_path = args["backup"]
-        if args["subdivisions"]:
-            self.subdivisions = args["subdivisions"]
+        # if args["subdivisions"]:
+        #     self.subdivisions = args["subdivisions"]
         if args["projectname"]:
             self.projectname = args["projectname"]
         if args["model"]:
@@ -54,6 +65,27 @@ class CustomYOLODetector:
 
         self.n_classes = 0
         self.n_labels = 0
+
+        print("YOLO MODEL: {}".format(self.model))
+
+    def download_dnn_model(self):
+        # change makefile to have GPU and OPENCV enabled
+
+        # Download Weights
+        print("Downloading model weights: {}".format(self.model))
+        if self.model == "yolov4-p5":
+            urllib.request.urlretrieve(
+                'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-csp.conv.142',
+                os.path.join(DARKNET_PATH, 'yolov4-csp.conv.142'))
+        elif self.model == "yolov4-tiny":
+            urllib.request.urlretrieve(
+                'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29',
+                os.path.join(DARKNET_PATH, 'yolov4-tiny.conv.29'))
+        else:
+            urllib.request.urlretrieve(
+                'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137',
+                'yolov4.conv.137')
+        print("Weights downloaded")
 
     def count_classes_number(self):
         print("Detecting classes number ...")
@@ -114,8 +146,10 @@ class CustomYOLODetector:
         This files loads the yolo
         :return:
         """
+
         # 1) Edit CFG file
-        print("Generating .cfg file for {} classes".format(self.n_classes))
+        if flag == "training":
+            print("Generating .cfg file for {} classes".format(self.n_classes))
         # print("Classes number: {}")
 
         # Edit subdivision, max_batches, classes and filters on configuration file
@@ -123,18 +157,25 @@ class CustomYOLODetector:
         max_batches = self.n_classes * 2000
         max_batches = 6000 if max_batches < 6000 else max_batches
         max_batches = self.n_labels if max_batches < self.n_labels else max_batches
+        if flag == "training":
+            print("Settings:")
+            print("max batches: {}".format(max_batches))
 
-        print("Settings:")
-        print("max batches: {}".format(max_batches))
+        # Choose subdivisions
+        subdivisions = self.subdivisions_by_model.get(self.model)
+
+        if flag == "test":
+            batch_size = 1
+            subdivisions = 1
 
         with open(self.custom_cfg_path, "r") as f_o:
             cfg_lines = f_o.readlines()
 
         lines = []
         for line in cfg_lines:
-            if re.search("subdivisions=[0-9]+\n", line) and args["subdivisions"]:
-                print("subdivisions: {}".format(args["subdivisions"]))
-                new_line = "subdivisions={}\n".format(args["subdivisions"])
+            if re.search("subdivisions=[0-9]+\n", line):
+                #print("subdivisions: {}".format(args["subdivisions"]))
+                new_line = "subdivisions={}\n".format(subdivisions)
                 lines.append(new_line)
                 continue
             elif re.search("width=[0-9]+\n", line) and args["imagesize"]:
@@ -173,10 +214,10 @@ class CustomYOLODetector:
             os.makedirs(self.dnn_path)
         if flag == "training":
             with open(self.new_custom_cfg_path, "w") as f_o:
-                f_o.writelines(cfg_lines)
+                f_o.writelines(lines)
         else:
             with open(self.new_custom_cfg_test_path, "w") as f_o:
-                f_o.writelines(cfg_lines)
+                f_o.writelines(lines)
 
     def generate_obj_data(self):
         obj_data = 'classes= {}\ntrain  = data/train.txt\nvalid  = data/test.txt\nnames = data/obj.names\nbackup = {}' \
@@ -227,7 +268,9 @@ if "__main__" == __name__:
 
     # Extract images
     cyd.count_classes_number()
+    weight_training = cyd.weights_by_model[cyd.model]
     cyd.generate_yolo_custom_cfg()
     cyd.generate_yolo_custom_cfg("test")
     cyd.generate_obj_data()
     cyd.generate_train_val_files()
+    cyd.download_dnn_model()
