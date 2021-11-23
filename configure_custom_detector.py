@@ -277,16 +277,13 @@ class CustomYOLODetector:
 
 
 
-if "__main__" == __name__:
-    cyd = CustomYOLODetector()
+cyd = CustomYOLODetector()
 
-    # Extract images
-    cyd.count_classes_number()
-    weight_training = cyd.weights_by_model[cyd.model]
-    if resume_interrupted:
-        weight_training = cyd.find_existing_weights(weight_training)
-    cyd.generate_yolo_custom_cfg()
-    cyd.generate_yolo_custom_cfg("test")
-    cyd.generate_obj_data()
-    cyd.generate_train_val_files()
-    cyd.download_dnn_model()
+# Extract images
+cyd.count_classes_number()
+weight_training = cyd.weights_by_model[cyd.model]
+cyd.generate_yolo_custom_cfg()
+cyd.generate_yolo_custom_cfg("test")
+cyd.generate_obj_data()
+cyd.generate_train_val_files()
+cyd.download_dnn_model()
