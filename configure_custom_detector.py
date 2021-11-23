@@ -36,7 +36,7 @@ class CustomYOLODetector:
 
         self.drive_folder = r"/content/gdrive/MyDrive/pysource_object_detection"
         self.custom_cfg_path = self.cfg_paths.get(self.model)
-        self.new_custom_cfg_path = "cfg/custom-detector.cfg"
+        self.new_custom_cfg_path = "cfg/{}-custom.cfg".format(self.model)
         self.dnn_path = "{}/{}/dnn".format(self.drive_folder, self.projectname)
         self.new_custom_cfg_test_path = "{}/{}/dnn/{}-custom.cfg".format(self.drive_folder, self.projectname, self.model)
         self.obj_data_path = "data/obj.data"
@@ -244,7 +244,7 @@ class CustomYOLODetector:
         print("Test.txt generated")
 
     def find_existing_weights(self):
-        new_weights_path = os.path.join(self.dnn_path, "custom-detector_last.weights")
+        new_weights_path = os.path.join(self.dnn_path, "{}-custom_last.weights".format(self.model))
         # check if new weights exists
         if os.path.exists(new_weights_path):
             print("Existing weigh file found on: {}".format(new_weights_path))
