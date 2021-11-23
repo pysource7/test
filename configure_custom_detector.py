@@ -264,30 +264,27 @@ class CustomYOLODetector:
                     break
         print("Test.txt generated")
 
-
-    # def find_existing_weights(self, current_weights):
-    #     new_weights_path = os.path.join(self.dnn_path, "custom-detector_last.weights")
-    #     # check if new weights exists
-    #     if os.path.exists(new_weights_path):
-    #         print("Existing weigh file found on: {}".format(new_weights_path))
-    #         print("Resuming interrupted training")
-    #         return new_weights_path
-    #     else:
-    #         print("Starting new training")
-    #         return current_weights
+    def find_existing_weights(self, current_weights):
+        new_weights_path = os.path.join(self.dnn_path, "custom-detector_last.weights")
+        # check if new weights exists
+        if os.path.exists(new_weights_path):
+            print("Existing weigh file found on: {}".format(new_weights_path))
+            print("Resuming interrupted training")
+            return new_weights_path
+        else:
+            print("Starting new training")
+            return current_weights
+        
+    def run(self):
+        self.count_classes_number()
+        self.generate_yolo_custom_cfg()
+        self.generate_yolo_custom_cfg("test")
+        self.generate_obj_data()
+        self.generate_train_val_files()
+        self.download_dnn_model()
 
 
 
 if "__main__" == __name__:
     cyd = CustomYOLODetector()
 
-    # Extract images
-    cyd.count_classes_number()
-    weight_training = cyd.weights_by_model[cyd.model]
-    # if resume_interrupted:
-    #     weight_training = cyd.find_existing_weights(weight_training)
-    cyd.generate_yolo_custom_cfg()
-    cyd.generate_yolo_custom_cfg("test")
-    cyd.generate_obj_data()
-    cyd.generate_train_val_files()
-    cyd.download_dnn_model()
