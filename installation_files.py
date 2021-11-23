@@ -1,5 +1,4 @@
 import os
-import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -15,21 +14,6 @@ def is_gpu_enabled():
     print('Found GPU at: {}'.format(device_name))
 
 
-def download_dnn_model(Model):
-    # change makefile to have GPU and OPENCV enabled
-
-    # Download Weights
-    if Model == "yolov4-p6":
-        urllib.request.urlretrieve('https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-p6.conv.289',
-                                   os.path.join(DARKNET_PATH, 'yolov4-p6.conv.289'))
-    elif Model == "yolov4-tiny":
-        urllib.request.urlretrieve(
-            'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.conv.29',
-            os.path.join(DARKNET_PATH, 'yolov4-tiny.conv.29'))
-    else:
-        urllib.request.urlretrieve(
-            'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137',
-            'yolov4.conv.137')
 
 # Connect google drive
 def connect_google_drive(project_name):
@@ -57,6 +41,14 @@ def extract_dataset(project_name):
     print("Extracting dataset ...")
     dataset_path = os.path.join(DRIVE_ROOT_DIR, project_name)
     dataset_path = os.path.join(dataset_path, "dataset.zip")
+
+    print("Dataset path: {}".format(dataset_path))
+
+    # Dataset exists
+    path = Path(dataset_path)
+    if not path.is_file():
+        raise FileNotFoundError("{} doesn't exist, make sure you uploaded the file on the correct folder and that its name is dataset.zip.")
+
     output_path = Path("/content/darknet/data/obj")
 
     with zipfile.ZipFile(dataset_path) as zip:
@@ -67,3 +59,16 @@ def extract_dataset(project_name):
             zip.extract(zip_info, output_path)
 
     print("Dataset Extracted")
+
+
+def find_existing_weights(current_weights, project_name):
+    dnn_path = "/content/gdrive/MyDrive/pysource_object_detection/{}/dnn".format(project_name)
+    new_weights_path = os.path.join(dnn_path, "custom-detector_last.weights")
+    # check if new weights exists
+    if os.path.exists(new_weights_path):
+        print("Existing weigh file found on: {}".format(new_weights_path))
+        print("Resuming interrupted training")
+        return new_weights_path
+    else:
+        print("Starting new training")
+        return current_weights
