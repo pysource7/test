@@ -243,7 +243,7 @@ class CustomYOLODetector:
                     break
         print("Test.txt generated")
 
-    def find_existing_weights(self, current_weights):
+    def find_existing_weights(self):
         new_weights_path = os.path.join(self.dnn_path, "custom-detector_last.weights")
         # check if new weights exists
         if os.path.exists(new_weights_path):
@@ -252,7 +252,7 @@ class CustomYOLODetector:
             return new_weights_path
         else:
             print("Starting new training")
-            return current_weights
+            return self.weights_by_model[self.model]
 
     def run(self):
         self.count_classes_number()
