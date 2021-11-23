@@ -283,7 +283,7 @@ if "__main__" == __name__:
 
     # Extract images
     cyd.count_classes_number()
-    # weight_training = cyd.weights_by_model[cyd.model]
+    weight_training = cyd.weights_by_model[cyd.model]
     # if resume_interrupted:
     #     weight_training = cyd.find_existing_weights(weight_training)
     cyd.generate_yolo_custom_cfg()
