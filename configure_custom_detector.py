@@ -27,6 +27,8 @@ ap.add_argument("-v", "--validation", type=int, required=False, default=10,
 # ap.add_argument("-r", "--radius", type=int, default=3, help="in")
 args = vars(ap.parse_args())
 
+#
+resume_interrupted = False
 
 class CustomYOLODetector:
     def __init__(self):
@@ -55,7 +57,7 @@ class CustomYOLODetector:
 
         self.drive_folder = r"/content/gdrive/MyDrive/pysource_object_detection"
         self.custom_cfg_path = self.cfg_paths.get(self.model)
-        self.new_custom_cfg_path = "cfg/temp-custom-detector.cfg"
+        self.new_custom_cfg_path = "cfg/custom-detector.cfg"
         self.dnn_path = "{}/{}/dnn".format(self.drive_folder, self.projectname)
         self.new_custom_cfg_test_path = "{}/{}/dnn/{}-custom.cfg".format(self.drive_folder, self.projectname, self.model)
         self.obj_data_path = "data/obj.data"
@@ -73,7 +75,7 @@ class CustomYOLODetector:
 
         # Download Weights
         print("Downloading model weights: {}".format(self.model))
-        if self.model == "yolov4-p5":
+        if self.model == "yolov4-csp":
             urllib.request.urlretrieve(
                 'https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-csp.conv.142',
                 os.path.join(DARKNET_PATH, 'yolov4-csp.conv.142'))
@@ -262,6 +264,18 @@ class CustomYOLODetector:
                     break
         print("Test.txt generated")
 
+    def find_existing_weights(self, current_weights):
+        new_weights_path = os.path.join(self.dnn_path, "custom-detector_last.weights")
+        # check if new weights exists
+        if os.path.exists(new_weights_path):
+            print("Existing weigh file found on: {}".format(new_weights_path))
+            print("Resuming interrupted training")
+            return new_weights_path
+        else:
+            print("Starting new training")
+            return current_weights
+
+
 
 if "__main__" == __name__:
     cyd = CustomYOLODetector()
@@ -269,6 +283,8 @@ if "__main__" == __name__:
     # Extract images
     cyd.count_classes_number()
     weight_training = cyd.weights_by_model[cyd.model]
+    if resume_interrupted:
+        weight_training = cyd.find_existing_weights(weight_training)
     cyd.generate_yolo_custom_cfg()
     cyd.generate_yolo_custom_cfg("test")
     cyd.generate_obj_data()
