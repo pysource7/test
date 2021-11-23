@@ -10,13 +10,11 @@ import zipfile
 from pathlib import Path
 
 DARKNET_PATH = "/content/darknet"
-ProjectName = "demo"
-Model = "yolov4"
 #
 resume_interrupted = False
 
 class CustomYOLODetector:
-    def __init__(self):
+    def __init__(self, ProjectName, Model):
         # Files location
         self.cfg_paths = {"yolov4": "cfg/yolov4-custom.cfg",
                      "yolov4-tiny": "cfg/yolov4-tiny-custom.cfg",
