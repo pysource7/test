@@ -10,23 +10,8 @@ import zipfile
 from pathlib import Path
 
 DARKNET_PATH = "/content/darknet"
-
-# construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-# ap.add_argument("-c", "--n_classes", type=int, required=True, help="number of classes")
-ap.add_argument("-b", "--backup", type=str, required=False, help="backup path")
-# ap.add_argument("-s", "--subdivisions", type=str, required=False, default="64", choices=["16", "32", "64"],
-#                 help="Subdivisions value (16, 32, 64)")
-ap.add_argument("-pn", "--projectname", type=str, required=True, help="Project Name")
-ap.add_argument("-m", "--model", type=str, required=False,
-                default="yolov4", help="YOLO Model")
-ap.add_argument("-is", "--imagesize", type=str, required=False,
-                help="Image size")
-ap.add_argument("-v", "--validation", type=int, required=False, default=10,
-                help="Yolo version")
-# ap.add_argument("-r", "--radius", type=int, default=3, help="in")
-args = vars(ap.parse_args())
-
+ProjectName = "demo"
+Model = "yolov4"
 #
 resume_interrupted = False
 
@@ -45,15 +30,9 @@ class CustomYOLODetector:
                             "yolov4-tiny": "yolov4-tiny.conv.29",
                             "yolov4-csp": "yolov4-csp.conv.142"}
 
-        # Argument import
-        if args["backup"]:
-            self.backup_folder_path = args["backup"]
-        # if args["subdivisions"]:
-        #     self.subdivisions = args["subdivisions"]
-        if args["projectname"]:
-            self.projectname = args["projectname"]
-        if args["model"]:
-            self.model = args["model"]
+
+        self.projectname = ProjectName
+        self.model = Model
 
         self.drive_folder = r"/content/gdrive/MyDrive/pysource_object_detection"
         self.custom_cfg_path = self.cfg_paths.get(self.model)
@@ -180,16 +159,16 @@ class CustomYOLODetector:
                 new_line = "subdivisions={}\n".format(subdivisions)
                 lines.append(new_line)
                 continue
-            elif re.search("width=[0-9]+\n", line) and args["imagesize"]:
-                print("width: {}".format(args["imagesize"]))
-                new_line = "width={}\n".format(args["imagesize"])
-                lines.append(new_line)
-                continue
-            elif re.search("height=[0-9]+\n", line) and args["imagesize"]:
-                print("height: {}".format(args["imagesize"]))
-                new_line = "height={}\n".format(args["imagesize"])
-                lines.append(new_line)
-                continue
+            # elif re.search("width=[0-9]+\n", line) and args["imagesize"]:
+            #     print("width: {}".format(args["imagesize"]))
+            #     new_line = "width={}\n".format(args["imagesize"])
+            #     lines.append(new_line)
+            #     continue
+            # elif re.search("height=[0-9]+\n", line) and args["imagesize"]:
+            #     print("height: {}".format(args["imagesize"]))
+            #     new_line = "height={}\n".format(args["imagesize"])
+            #     lines.append(new_line)
+            #     continue
             elif re.search("max_batches[0-9\s=]+\n", line):
                 new_line = "max_batches = {}\n".format(max_batches)
                 lines.append(new_line)
@@ -274,7 +253,7 @@ class CustomYOLODetector:
         else:
             print("Starting new training")
             return current_weights
-        
+
     def run(self):
         self.count_classes_number()
         self.generate_yolo_custom_cfg()
