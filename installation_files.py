@@ -61,7 +61,7 @@ def extract_dataset(project_name):
     print("Dataset Extracted")
 
 
-def find_existing_weights(current_weights, project_name):
+def find_existing_weights(project_name):
     dnn_path = "/content/gdrive/MyDrive/pysource_object_detection/{}/dnn".format(project_name)
     new_weights_path = os.path.join(dnn_path, "custom-detector_last.weights")
     # check if new weights exists
@@ -69,6 +69,3 @@ def find_existing_weights(current_weights, project_name):
         print("Existing weigh file found on: {}".format(new_weights_path))
         print("Resuming interrupted training")
         return new_weights_path
-    else:
-        print("Starting new training")
-        return current_weights
