@@ -44,9 +44,11 @@ class CustomYOLODetector:
 
         self.n_classes = 0
         self.n_labels = 0
+        
+        self.test_images_list = []
 
         print("YOLO MODEL: {}".format(self.model))
-
+        
     def download_dnn_model(self):
         # change makefile to have GPU and OPENCV enabled
 
@@ -227,19 +229,24 @@ class CustomYOLODetector:
             img_name_basename = os.path.basename(img_path)
             img_name = os.path.splitext(img_name_basename)[0]
 
-        with open("data/train.txt", "w") as f_o:
-            f_o.write("\n".join(images_list))
-        print("Train.txt generated")
-
         # Generate test files, 10% of training
         test_number = len(images_list) // 10
         print("Test images: {}".format(test_number))
+        self.test_images_list = []
         with open("data/test.txt", "w") as f_o:
             for i, path in enumerate(images_list):
                 f_o.writelines("{}\n".format(path))
+                self.test_images_list.append(path)
                 if i == test_number:
                     break
         print("Test.txt generated")
+        
+        with open("data/train.txt", "w") as f_o:
+            for i, path in enumerate(images_list):
+                if i > test_number:
+                    f_o.writelines("{}\n".format(path))
+        print("Train.txt generated")
+        
 
     def find_existing_weights(self):
         new_weights_path = os.path.join(self.dnn_path, "{}-custom_last.weights".format(self.model))
